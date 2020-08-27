@@ -2,5 +2,5 @@
 /*  register_types.h                                                     */
 /*************************************************************************/
 
-void register_lottie_types();
-void unregister_lottie_types();
+void register_gd_lottie_types();
+void unregister_gd_lottie_types();

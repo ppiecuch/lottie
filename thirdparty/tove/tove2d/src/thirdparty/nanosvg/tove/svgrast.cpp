@@ -359,7 +359,7 @@ void drawGradientScanline(
 
 	// TODO: spread modes.
 	// TODO: plenty of opportunities to optimize.
-	float fx, fy, dx, gy;
+	float fx, fy, dx;
 	int i, cr, cg, cb, ca;
 	unsigned int c;
 	Gradient gradient(cache);

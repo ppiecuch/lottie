@@ -9,3 +9,5 @@
 #ifdef LOTTIE_CACHE
 #define LOTTIE_CACHE_SUPPORT
 #endif
+
+#include "thirdparty/c++/c++compat.h"

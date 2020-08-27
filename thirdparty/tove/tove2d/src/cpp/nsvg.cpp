@@ -39,7 +39,9 @@ thread_local ToveRasterizeSettings defaultSettings = {-1.0f, -1.0f, 0};
 #define NSVG_SCOPE_LOCALE 0
 
 class NanoSVGEnvironment {
+#if NSVG_SCOPE_LOCALE
 	const char* previousLocale;
+#endif
 
 public:
 	inline NanoSVGEnvironment() {

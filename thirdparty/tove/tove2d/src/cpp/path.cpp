@@ -143,8 +143,8 @@ void Path::set(const NSVGshape *shape) {
 }
 
 Path::Path() :
-	changes(CHANGED_BOUNDS | CHANGED_EXACT_BOUNDS),
-	pathIndex(-1) {
+	pathIndex(-1),
+	changes(CHANGED_BOUNDS | CHANGED_EXACT_BOUNDS) {
 
 	memset(&nsvg, 0, sizeof(nsvg));
 
@@ -168,8 +168,8 @@ Path::Path() :
 }
 
 Path::Path(const NSVGshape *shape) :
-	changes(0),
-	pathIndex(-1) {
+	pathIndex(-1),
+	changes(0) {
 
 	set(shape);
 	newSubpath = true;
@@ -184,8 +184,8 @@ Path::Path(const char *d) : changes(0), pathIndex(-1) {
 }
 
 Path::Path(const Path *path) :
-	changes(CHANGED_BOUNDS | CHANGED_EXACT_BOUNDS),
-	pathIndex(-1) {
+	pathIndex(-1),
+	changes(CHANGED_BOUNDS | CHANGED_EXACT_BOUNDS) {
 
 	memset(&nsvg, 0, sizeof(nsvg));
 

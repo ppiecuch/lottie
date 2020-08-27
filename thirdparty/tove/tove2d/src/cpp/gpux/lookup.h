@@ -41,16 +41,16 @@ public:
 	typedef tsl::robin_set<uint8_t> CurveSet;
 
 private:
-	ToveShaderGeometryData &_data;
     CurveSet active;
+    ToveShaderGeometryData &_data;
     const int _maxCurves;
-	const int _ignore;
+    const int _ignore;
 
 public:
     LookupTable(int maxCurves, ToveShaderGeometryData &data, int ignore) :
-		active(4),
-        _maxCurves(maxCurves),
+         active(4),
         _data(data),
+        _maxCurves(maxCurves),
         _ignore(ignore) {
     }
 

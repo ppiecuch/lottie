@@ -2965,7 +2965,6 @@ static void nsvg__transformShapes(NSVGshape* shapes, float tx, float ty, float s
 	NSVGshape* shape;
 	NSVGpath* path;
 	float avgs;
-	float bounds[4];
 	float t[6];
 	int i;
 	float* pt;

@@ -14,13 +14,6 @@ env_lottie.Prepend(CPPPATH=['thirdparty/rlottie/src/vector/freetype'])
 env_lottie.Append(CCDEFINES=["LOT_BUILD"])
 env_lottie.Append(CPPDEFINES=["LOT_BUILD"])
 
-env_thirdparty = env_lottie.Clone()
-# env_thirdparty.disable_warnings()
-env_thirdparty.add_source_files(env.modules_sources, "thirdparty/rlottie/src/lottie/*.cpp")
-env_thirdparty.add_source_files(env.modules_sources, "thirdparty/rlottie/src/vector/*.cpp")
-env_thirdparty.add_source_files(env.modules_sources, "thirdparty/rlottie/src/vector/stb/*.cpp")
-env_thirdparty.add_source_files(env.modules_sources, "thirdparty/rlottie/src/vector/freetype/*.cpp")
-
 import os 
 dir_path = Dir('.').abspath
 
@@ -46,15 +39,24 @@ env_lottie.PackageSL(
 	'thirdparty/tove/tove2d/src/glsl/line.vert.inc',
 	Glob('thirdparty/tove/tove2d/src/glsl/line.vert'))
 
-env_thirdparty = env_lottie.Clone()
-env_thirdparty.disable_warnings()
-env_thirdparty.add_source_files(env.modules_sources, "thirdparty/tove/tove2d/src/cpp/*.cpp")
-env_thirdparty.add_source_files(env.modules_sources, "thirdparty/tove/tove2d/src/cpp/mesh/*.cpp")
-env_thirdparty.add_source_files(env.modules_sources, "thirdparty/tove/tove2d/src/cpp/shader/*.cpp")
-env_thirdparty.add_source_files(env.modules_sources, "thirdparty/tove/tove2d/src/cpp/gpux/*.cpp")
-env_thirdparty.add_source_files(env.modules_sources, "thirdparty/tove/tove2d/src/thirdparty/*.cpp")
-env_thirdparty.add_source_files(env.modules_sources, "thirdparty/tove/tove2d/src/thirdparty/polypartition/src/*.cpp")
-env_thirdparty.add_source_files(env.modules_sources, "thirdparty/tove/tove2d/src/thirdparty/tinyxml2/tinyxml2.cpp")
+sources = Glob("*.cpp")
 
-env_lottie.add_source_files(env.modules_sources, "*.cpp")
-env_lottie.add_source_files(env.modules_sources, "thirdparty/tove/*.cpp")
+sources += Glob("thirdparty/rlottie/src/lottie/*.cpp")
+sources += Glob("thirdparty/rlottie/src/vector/*.cpp")
+sources += Glob("thirdparty/rlottie/src/vector/stb/*.cpp")
+sources += Glob("thirdparty/rlottie/src/vector/freetype/*.cpp")
+
+sources += Glob("thirdparty/tove/tove2d/src/cpp/*.cpp")
+sources += Glob("thirdparty/tove/tove2d/src/cpp/mesh/*.cpp")
+sources += Glob("thirdparty/tove/tove2d/src/cpp/shader/*.cpp")
+sources += Glob("thirdparty/tove/tove2d/src/cpp/gpux/*.cpp")
+sources += Glob("thirdparty/tove/tove2d/src/thirdparty/*.cpp")
+sources += Glob("thirdparty/tove/tove2d/src/thirdparty/polypartition/src/*.cpp")
+sources += Glob("thirdparty/tove/tove2d/src/thirdparty/tinyxml2/tinyxml2.cpp")
+
+sources += Glob("thirdparty/tove/*.cpp")
+
+# Compile as a static library
+lib = env_lottie.Library("gd_lottie", sources)
+# Add the library as a dependency of the final executable
+env.Prepend(LIBS=[lib])

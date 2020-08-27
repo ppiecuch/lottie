@@ -235,7 +235,7 @@ String ResourceImporterLottie::get_visible_name() const {
 }
 
 void ResourceImporterLottie::get_recognized_extensions(List<String> *p_extensions) const {
-	p_extensions->push_back("json");
+	p_extensions->push_back("lottie.json");
 }
 
 String ResourceImporterLottie::get_save_extension() const {
@@ -293,7 +293,7 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 		animation->set_length((lottie->totalFrame() - 1) * hertz);
 		animation->track_set_path(track, frame_root_path);
 		animation->track_insert_key(track, float(0) * hertz, 0);
-		animation->track_insert_key(track, float(lottie->totalFrame() - 1) * hertz, lottie->totalFrame() - 1);
+		animation->track_insert_key(track, float(lottie->totalFrame() - 1) * hertz, uint64_t(lottie->totalFrame() - 1));
 		animation->set_loop(true);
 		ap->add_animation("Default", animation);
 		root->add_child(ap);

@@ -466,8 +466,7 @@ static void alignHandle(
 	float p0x, float p0y,
 	float *cp1) {
 
-	float newphi;
-	const float newmag = polar(px, py, p0x, p0y, &newphi);
+	float newphi; polar(px, py, p0x, p0y, &newphi);
 
 	const float cp1mag = polar(cp1[0], cp1[1], p0x, p0y);
 
