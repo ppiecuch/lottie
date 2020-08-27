@@ -1,10 +1,36 @@
 /*************************************************************************/
-/*  resource_importer_lottie.h   	                                     */
+/*  resource_importer_lottie.h	                                         */
 /*************************************************************************/
-
+/*                       This file is part of:                           */
+/*                           GODOT ENGINE                                */
+/*                      https://godotengine.org                          */
+/*************************************************************************/
+/* Copyright (c) 2007-2020 Juan Linietsky, Ariel Manzur.                 */
+/* Copyright (c) 2014-2020 Godot Engine contributors (cf. AUTHORS.md).   */
+/*                                                                       */
+/* Permission is hereby granted, free of charge, to any person obtaining */
+/* a copy of this software and associated documentation files (the       */
+/* "Software"), to deal in the Software without restriction, including   */
+/* without limitation the rights to use, copy, modify, merge, publish,   */
+/* distribute, sublicense, and/or sell copies of the Software, and to    */
+/* permit persons to whom the Software is furnished to do so, subject to */
+/* the following conditions:                                             */
+/*                                                                       */
+/* The above copyright notice and this permission notice shall be        */
+/* included in all copies or substantial portions of the Software.       */
+/*                                                                       */
+/* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,       */
+/* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF    */
+/* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.*/
+/* IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY  */
+/* CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,  */
+/* TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE     */
+/* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                */
+/*************************************************************************/
 #ifndef RESOURCE_IMPORTER_LOTTIE
 #define RESOURCE_IMPORTER_LOTTIE
 
+#include "core/io/resource_importer.h"
 #include "core/io/resource_saver.h"
 #include "core/io/resource_importer.h"
 #include "scene/3d/mesh_instance.h"
@@ -12,36 +38,8 @@
 #include "scene/resources/packed_scene.h"
 #include "scene/resources/primitive_meshes.h"
 
-#include "thirdparty/rlottie/inc/rlottie.h"
-#include "thirdparty/rlottie/inc/rlottiecommon.h"
-#include "thirdparty/tove/tove2d/src/cpp/graphics.h"
-#include "thirdparty/tove/vector_graphics_adaptive_renderer.h"
-#include "thirdparty/tove/vector_graphics_color.h"
-#include "thirdparty/tove/vector_graphics_editor.h"
-#include "thirdparty/tove/vector_graphics_linear_gradient.h"
-#include "thirdparty/tove/vector_graphics_path.h"
-#include "thirdparty/tove/vector_graphics_radial_gradient.h"
-#include "thirdparty/tove/vector_graphics_texture_renderer.h"
-
 class ResourceImporterLottie : public ResourceImporter {
 	GDCLASS(ResourceImporterLottie, ResourceImporter);
-	void _visit_render_node(const LOTLayerNode *layer, Node *p_owner, VGPath *p_current_node);
-
-	void _read_gradient(LOTNode *node, VGPath *path);
-	/* The LayerNode can contain list of child layer node
-   or a list of render node which will be having the 
-   path and fill information.
-   so visit_layer_node() checks if it is a composite layer
-   then it calls visit_layer_node() for all its child layer
-   otherwise calls visit_render_node() which try to visit all
-   the nodes present in the NodeList.
-
-   Note: renderTree() was only meant for internal use and only c structs
-   for not duplicating the data. so never save the raw pointers.
-   If possible try to avoid using it. 
-
-   https://github.com/Samsung/rlottie/issues/384#issuecomment-670319668 */
-	void _visit_layer_node(const LOTLayerNode *layer, Node *p_owner, VGPath *p_current_node);
 
 public:
 	virtual String get_importer_name() const;
@@ -64,7 +62,7 @@ public:
 			List<String> *r_gen_files = NULL,
 			Variant *r_metadata = NULL);
 
-	ResourceImporterLottie();
-	~ResourceImporterLottie();
+	ResourceImporterLottie() {}
+	~ResourceImporterLottie() {}
 };
 #endif // RESOURCE_IMPORTER_LOTTIE
