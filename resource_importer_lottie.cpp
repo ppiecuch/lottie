@@ -30,6 +30,7 @@
 
 #include "resource_importer_lottie.h"
 
+#include "core/bind/core_bind.h"
 #include "core/io/file_access_pack.h"
 #include "scene/2d/animated_sprite.h"
 #include "scene/2d/sprite.h"
@@ -44,8 +45,11 @@ String ResourceImporterLottie::get_preset_name(int p_idx) const {
 
 void ResourceImporterLottie::get_import_options(List<ImportOption> *r_options, int p_preset) const {
 	r_options->push_back(ImportOption(PropertyInfo(Variant::BOOL, "3d"), false));
-	r_options->push_back(ImportOption(PropertyInfo(Variant::BOOL, "compress/video_ram"), true));
-	r_options->push_back(ImportOption(PropertyInfo(Variant::REAL, "compress/lossy_quality", PROPERTY_HINT_RANGE, "0,1,0.01"), 0.7));
+	Dictionary d = Engine::get_singleton()->get_version_info();
+	if (!(d["major"] == Variant(3) && d["minor"] == Variant(1))) {
+		r_options->push_back(ImportOption(PropertyInfo(Variant::BOOL, "compress/video_ram"), true));
+		r_options->push_back(ImportOption(PropertyInfo(Variant::REAL, "compress/lossy_quality", PROPERTY_HINT_RANGE, "0,1,0.01"), 0.7));
+	}
 	r_options->push_back(ImportOption(PropertyInfo(Variant::INT, "start_frame", PROPERTY_HINT_RANGE, "0,65536,1,or_greater"), 0));
 	r_options->push_back(ImportOption(PropertyInfo(Variant::VECTOR2, "scale"), Vector2(1.0f, 1.0f)));
 	r_options->push_back(ImportOption(PropertyInfo(Variant::BOOL, "animation/import"), true));
@@ -82,9 +86,12 @@ int ResourceImporterLottie::get_preset_count() const {
 
 Error ResourceImporterLottie::import(const String &p_source_file, const String &p_save_path, const Map<StringName, Variant> &p_options, List<String> *r_platform_variants, List<String> *r_gen_files, Variant *r_metadata) {
 	FileAccess *file = FileAccess::create(FileAccess::ACCESS_RESOURCES);
-	Error err;
-	String data = file->get_file_as_string(p_source_file, &err);
-	ERR_FAIL_COND_V(err != Error::OK, FAILED);
+	String data;
+	//Backport code
+	//String data = file->get_file_as_string(p_source_file, &err);
+	Vector<uint8_t> array = file->get_file_as_array(p_source_file);
+	data.parse_utf8((const char *)array.ptr(), array.size());
+	//End backport code
 	std::unique_ptr<rlottie::Animation> lottie =
 			rlottie::Animation::loadFromData(data.utf8().ptrw(), p_source_file.utf8().ptr());
 	ERR_FAIL_COND_V(!lottie, FAILED);
@@ -125,19 +132,22 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 		Ref<Image> img;
 		img.instance();
 		img->create((int)width, (int)height, false, Image::FORMAT_RGBA8, pixels);
-		if (p_options["compress/video_ram"]) {
-			if (ProjectSettings::get_singleton()->get("rendering/vram_compression/import_etc2")) {
-				img->compress(Image::COMPRESS_ETC2, Image::COMPRESS_SOURCE_GENERIC, p_options["compress/lossy_quality"]);
-			} else if (ProjectSettings::get_singleton()->get("rendering/vram_compression/import_etc")) {
-				img->compress(Image::COMPRESS_ETC, Image::COMPRESS_SOURCE_GENERIC, p_options["compress/lossy_quality"]);
-			} else if (ProjectSettings::get_singleton()->get("rendering/vram_compression/import_pvrtc")) {
-				img->compress(Image::COMPRESS_PVRTC2, Image::COMPRESS_SOURCE_GENERIC, p_options["compress/lossy_quality"]);
-			} else {
-				img->compress(Image::COMPRESS_S3TC, Image::COMPRESS_SOURCE_GENERIC, p_options["compress/lossy_quality"]);
-			}
-		}
 		Ref<ImageTexture> image_tex;
 		image_tex.instance();
+		Dictionary d = Engine::get_singleton()->get_version_info();
+		if (!(d["major"] == Variant(3) && d["minor"] == Variant(1))) {
+			if (p_options["compress/video_ram"]) {
+				if (ProjectSettings::get_singleton()->get("rendering/vram_compression/import_etc2")) {
+					img->compress(Image::COMPRESS_ETC2, Image::COMPRESS_SOURCE_GENERIC, p_options["compress/lossy_quality"]);
+				} else if (ProjectSettings::get_singleton()->get("rendering/vram_compression/import_etc")) {
+					img->compress(Image::COMPRESS_ETC, Image::COMPRESS_SOURCE_GENERIC, p_options["compress/lossy_quality"]);
+				} else if (ProjectSettings::get_singleton()->get("rendering/vram_compression/import_pvrtc")) {
+					img->compress(Image::COMPRESS_PVRTC2, Image::COMPRESS_SOURCE_GENERIC, p_options["compress/lossy_quality"]);
+				} else {
+					img->compress(Image::COMPRESS_S3TC, Image::COMPRESS_SOURCE_GENERIC, p_options["compress/lossy_quality"]);
+				}
+			}
+		}
 		image_tex->create_from_image(img);
 		frames->add_frame(name, image_tex);
 	}
