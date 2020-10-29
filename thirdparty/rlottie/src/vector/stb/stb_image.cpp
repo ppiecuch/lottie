@@ -2,6 +2,7 @@
  * configure stb_image about
  * the image we will support
  */
+#define STB_IMAGE_STATIC
 #define STB_IMAGE_IMPLEMENTATION
 
 #define STBI_ONLY_JPEG
