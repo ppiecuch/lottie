@@ -47,10 +47,11 @@ void ResourceImporterLottie::get_import_options(List<ImportOption> *r_options, i
 	r_options->push_back(ImportOption(PropertyInfo(Variant::BOOL, "3d"), false));
 	Dictionary d = Engine::get_singleton()->get_version_info();
 	if (!(d["major"] == Variant(3) && d["minor"] == Variant(1))) {
-		r_options->push_back(ImportOption(PropertyInfo(Variant::BOOL, "compress/video_ram"), true));
+		r_options->push_back(ImportOption(PropertyInfo(Variant::BOOL, "compress/lossy"), true));
 		r_options->push_back(ImportOption(PropertyInfo(Variant::REAL, "compress/lossy_quality", PROPERTY_HINT_RANGE, "0,1,0.01"), 0.7));
 	}
 	r_options->push_back(ImportOption(PropertyInfo(Variant::INT, "start_frame", PROPERTY_HINT_RANGE, "0,65536,1,or_greater"), 0));
+	r_options->push_back(ImportOption(PropertyInfo(Variant::REAL, "skip_frames", PROPERTY_HINT_RANGE, "0,10,0.2,or_greater"), 0));
 	r_options->push_back(ImportOption(PropertyInfo(Variant::VECTOR2, "scale"), Vector2(1.0f, 1.0f)));
 	r_options->push_back(ImportOption(PropertyInfo(Variant::BOOL, "animation/import"), true));
 	r_options->push_back(ImportOption(PropertyInfo(Variant::BOOL, "animation/begin_playing"), true));
@@ -110,46 +111,53 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 	List<StringName> animations;
 	frames->get_animation_list(&animations);
 	String name = animations[0];
-	frames->set_animation_speed(name, lottie->frameRate());
-	for (int32_t frame_i = 0; frame_i < lottie->totalFrame(); frame_i++) {
+	double_t skip_frames = p_options["skip_frames"];
+	frames->set_animation_speed(name, lottie->frameRate() / (1.0 + skip_frames));
+	Vector<Ref<ImageTexture> > image_textures;
+
+	int godot_frame_count = (int) (lottie->totalFrame() / (1.0 + skip_frames)) + 1;
+	image_textures.resize(godot_frame_count);
+	for (int32_t frame_godot = 0; frame_godot < godot_frame_count; frame_godot++) {
+		Ref<ImageTexture> tex;
+		tex.instance();
+		if (p_options["compress/lossy"]) {
+			tex->set_storage(ImageTexture::STORAGE_COMPRESS_LOSSY);
+		} else {
+			tex->set_storage(ImageTexture::STORAGE_COMPRESS_LOSSLESS);
+		}
+		image_textures.write[frame_godot] = tex;
+	}
+
+	float unskipped = 0;
+	int frame_godot = 0;
+	for (int32_t frame_lottie = 0; frame_lottie < lottie->totalFrame(); frame_lottie++) {
+		int skipped_frames = (int)floor(unskipped);
+		frame_lottie += skipped_frames;
+		unskipped -= skipped_frames;
+
 		Vector<uint32_t> buffer;
 		buffer.resize(width * height);
 		rlottie::Surface surface(buffer.ptrw(), width, height, width * 4);
-		lottie->renderSync(frame_i, surface);
+		lottie->renderSync(frame_lottie, surface);
 		PoolByteArray pixels;
 		int32_t buffer_byte_size = buffer.size() * sizeof(uint32_t);
 		pixels.resize(buffer_byte_size);
 		PoolByteArray::Write pixel_write = pixels.write();
 		memcpy(pixel_write.ptr(), buffer.ptr(), buffer_byte_size);
+		uint8_t *ptr_pixel_write = pixel_write.ptr();
 		for (int32_t pixel_i = 0; pixel_i < pixels.size(); pixel_i += 4) {
-			uint8_t r = pixels[pixel_i + 2];
-			uint8_t g = pixels[pixel_i + 1];
-			uint8_t b = pixels[pixel_i + 0];
-			pixel_write[pixel_i + 2] = b;
-			pixel_write[pixel_i + 1] = g;
-			pixel_write[pixel_i + 0] = r;
+			SWAP(ptr_pixel_write[pixel_i + 2], ptr_pixel_write[pixel_i + 0]);
 		}
 		Ref<Image> img;
 		img.instance();
 		img->create((int)width, (int)height, false, Image::FORMAT_RGBA8, pixels);
-		Ref<ImageTexture> image_tex;
-		image_tex.instance();
 		Dictionary d = Engine::get_singleton()->get_version_info();
-		if (!(d["major"] == Variant(3) && d["minor"] == Variant(1))) {
-			if (p_options["compress/video_ram"]) {
-				if (ProjectSettings::get_singleton()->get("rendering/vram_compression/import_etc2")) {
-					img->compress(Image::COMPRESS_ETC2, Image::COMPRESS_SOURCE_GENERIC, p_options["compress/lossy_quality"]);
-				} else if (ProjectSettings::get_singleton()->get("rendering/vram_compression/import_etc")) {
-					img->compress(Image::COMPRESS_ETC, Image::COMPRESS_SOURCE_GENERIC, p_options["compress/lossy_quality"]);
-				} else if (ProjectSettings::get_singleton()->get("rendering/vram_compression/import_pvrtc")) {
-					img->compress(Image::COMPRESS_PVRTC2, Image::COMPRESS_SOURCE_GENERIC, p_options["compress/lossy_quality"]);
-				} else {
-					img->compress(Image::COMPRESS_S3TC, Image::COMPRESS_SOURCE_GENERIC, p_options["compress/lossy_quality"]);
-				}
-			}
-		}
-		image_tex->create_from_image(img);
-		frames->add_frame(name, image_tex);
+		Ref<ImageTexture> tex = image_textures.write[frame_godot];
+		tex->create_from_image(img, ImageTexture::FLAG_REPEAT | ImageTexture::FLAG_FILTER);
+		frames->add_frame(name, tex);
+
+		unskipped += skip_frames;
+		frame_godot++;
 	}
 	Node *root = nullptr;
 	if (p_options["3d"] && !p_options["animation/import"]) {
