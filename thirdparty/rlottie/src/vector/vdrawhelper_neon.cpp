@@ -14,9 +14,17 @@ extern "C" void pixman_composite_over_n_8888_asm_neon(int32_t w, int32_t h,
 
 void memfill32(uint32_t *dest, uint32_t value, int length)
 {
-    pixman_composite_src_n_8888_asm_neon(length, 1, dest, length, value);
+#ifdef GD_ENABLE_NEON_HELPERS
+	pixman_composite_src_n_8888_asm_neon(length, 1, dest, length, value);
+#else
+    // let compiler do the auto vectorization.
+    for (int i = 0 ; i < length; i++) {
+        *dest++ = value;
+    }
+#endif
 }
 
+#ifdef GD_ENABLE_NEON_HELPERS
 static void color_SourceOver(uint32_t *dest, int length,
                                       uint32_t color,
                                      uint32_t const_alpha)
@@ -30,4 +38,11 @@ void RenderFuncTable::neon()
 {
     updateColor(BlendMode::Src , color_SourceOver);
 }
+#else
+void RenderFuncTable::neon()
+{
+     // Do nothing, use C implementation
+}
+#endif
+
 #endif

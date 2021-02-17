@@ -34,6 +34,8 @@
  *  - pixman_composite_over_n_8_0565_asm_neon
  */
 
+ #ifdef GD_ENABLE_NEON_HELPERS
+
 /* Prevent the stack from becoming executable for no reason... */
 #if defined(__linux__) && defined(__ELF__)
 .section .note.GNU-stack,"",%progbits
@@ -63,6 +65,7 @@ fname:
 .endm
 
 //#include "pixman-private.h"
+
 /*
  * The defines which are shared between C and assembly code
  */
@@ -495,3 +498,5 @@ generate_composite_function \
     0  /* mask_basereg  */
 
 /******************************************************************************/
+
+#endif // GD_ENABLE_NEON_HELPERS
