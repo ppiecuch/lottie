@@ -21,7 +21,7 @@ env_thirdparty.add_source_files(env.modules_sources, "thirdparty/rlottie/src/vec
 env_thirdparty.add_source_files(env.modules_sources, "thirdparty/rlottie/src/vector/stb/*.cpp")
 env_thirdparty.add_source_files(env.modules_sources, "thirdparty/rlottie/src/vector/freetype/*.cpp")
 
-if env["arch"] in ["arm"] or env["android_arch"] in ["armv7"]:
+if env["arch"] in ["arm"] or ("android_arch" in env and env["android_arch"] in ["armv7"]):
 	env_thirdparty.add_source_files(env.modules_sources, "thirdparty/rlottie/src/vector/pixman/*.S")
 
 env_lottie.add_source_files(env.modules_sources, "*.cpp")
