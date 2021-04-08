@@ -36,8 +36,11 @@
 #include "scene/2d/sprite.h"
 #include "scene/3d/sprite_3d.h"
 
+#pragma warning( push )
+#pragma warning( disable : 4251 ) 
 #include "thirdparty/rlottie/inc/rlottie.h"
 #include "thirdparty/rlottie/inc/rlottiecommon.h"
+#include <climits>
 
 String ResourceImporterLottie::get_preset_name(int p_idx) const {
 	return String();
@@ -125,12 +128,14 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 		} else {
 			tex->set_storage(ImageTexture::STORAGE_COMPRESS_LOSSLESS);
 		}
+		ERR_CONTINUE(frame_godot >= image_textures.size());
 		image_textures.write[frame_godot] = tex;
 	}
 
 	float unskipped = 0;
-	int frame_godot = 0;
-	for (int32_t frame_lottie = 0; frame_lottie < lottie->totalFrame(); frame_lottie++) {
+	int32_t frame_godot = 0;
+	int32_t total_frame = MIN(lottie->totalFrame(), INT_MAX);
+	for (int32_t frame_lottie = 0; frame_lottie < total_frame; frame_lottie++) {
 		int skipped_frames = (int)floor(unskipped);
 		frame_lottie += skipped_frames;
 		unskipped -= skipped_frames;
@@ -152,6 +157,7 @@ Error ResourceImporterLottie::import(const String &p_source_file, const String &
 		img.instance();
 		img->create((int)width, (int)height, false, Image::FORMAT_RGBA8, pixels);
 		Dictionary d = Engine::get_singleton()->get_version_info();
+		ERR_CONTINUE(frame_godot >= image_textures.size());
 		Ref<ImageTexture> tex = image_textures.write[frame_godot];
 		tex->create_from_image(img, ImageTexture::FLAG_REPEAT | ImageTexture::FLAG_FILTER);
 		frames->add_frame(name, tex);
