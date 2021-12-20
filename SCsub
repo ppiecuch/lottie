@@ -14,14 +14,17 @@ env_lottie.Prepend(CPPPATH=["thirdparty/rlottie/src/vector/stb"])
 
 env_lottie.Append(CPPDEFINES=["RLOTTIE_BUILD"])
 
-env_thirdparty = env_lottie.Clone()
-env_thirdparty.disable_warnings()
-env_thirdparty.add_source_files(env.modules_sources, "thirdparty/rlottie/src/lottie/*.cpp")
-env_thirdparty.add_source_files(env.modules_sources, "thirdparty/rlottie/src/vector/*.cpp")
-env_thirdparty.add_source_files(env.modules_sources, "thirdparty/rlottie/src/vector/stb/*.cpp")
-env_thirdparty.add_source_files(env.modules_sources, "thirdparty/rlottie/src/vector/freetype/*.cpp")
+sources = Glob("thirdparty/rlottie/src/lottie/*.cpp") \
+    + Glob("thirdparty/rlottie/src/vector/*.cpp") \
+    + Glob("thirdparty/rlottie/src/vector/stb/*.cpp") \
+    + Glob("thirdparty/rlottie/src/vector/freetype/*.cpp")
 
 if env["arch"] in ["arm"] or ("android_arch" in env and env["android_arch"] in ["armv7"]):
-    env_thirdparty.add_source_files(env.modules_sources, "thirdparty/rlottie/src/vector/pixman/*.S")
+    sources += Glob("thirdparty/rlottie/src/vector/pixman/*.S")
 
-env_lottie.add_source_files(env.modules_sources, "*.cpp")
+sources += Glob("*.cpp")
+
+# Compile as a static library
+lib = env_lottie.Library("gd_lottie", sources)
+# Add the library as a dependency of the final executable
+env.Prepend(LIBS=[lib])
